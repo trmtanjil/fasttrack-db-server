@@ -31,8 +31,22 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const database = client.db("fasttrackDB");
+    const usersCollection = database.collection('users')
     const parcelsCollection = database.collection("parcels");
     const paymentsCollection= database.collection("payments")
+
+    app.post('/users', async(req,res)=>{
+      const email = req.body.email;
+      const userExists = await usersCollection.findOne({email})
+      if(userExists){
+       return res.send({ message: 'User already exists', status: 'exists' });
+      }
+      const user = req.body;
+      const result = await usersCollection.insertOne(user)
+      res.send(result)
+    })
+
+
 
     // Get All Parcels API
     app.get("/parcels", async (req, res) => {
@@ -103,7 +117,7 @@ async function run() {
 app.post('/payments', async (req, res) => {
   try {
     // ✅ Destructure incoming payment data from request body
-    const { parcelId: parchelId, amount, transactionId, email,paymentMethod } = req.body;
+    const { parchelId: parchelId, amount, transactionId, email,paymentMethod } = req.body;
 
 
      // 2️⃣ Update parcel's payment_status to 'paid'
